@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DrawSocket - Collaborative Drawing Community</title>
+  <link rel="stylesheet" href="multipage-styles.css">
+  <link rel="stylesheet" href="brush-styles.css">
+  <link rel="stylesheet" href="pagination.css">
+</head>
+<body>
+  <div class="phone-container">
+    <!-- 页面0: 登录/注册 -->
+    <div class="page" id="loginPage">
+      <div class="login-container">
+        <div class="login-header">
+          <h1>🎨 DrawSocket</h1>
+          <p>Collaborative Drawing Community</p>
+        </div>
+
+        <div class="login-form" id="loginForm">
+          <h2>Login</h2>
+          <input type="text" id="loginUsername" placeholder="Username" autocomplete="username">
+          <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+          <button onclick="handleLogin()" class="primary-btn">Login</button>
+          <p class="switch-form">Don't have an account? <a href="#" onclick="showRegisterForm();return false;">Sign up</a></p>
+        </div>
+
+        <div class="login-form" id="registerForm" style="display: none;">
+          <h2>Sign Up</h2>
+          <input type="text" id="registerUsername" placeholder="Username" autocomplete="username">
+          <input type="text" id="registerDisplayName" placeholder="Display Name (Optional)">
+          <input type="password" id="registerPassword" placeholder="Password" autocomplete="new-password">
+          <input type="password" id="registerPasswordConfirm" placeholder="Confirm Password" autocomplete="new-password">
+          <button onclick="handleRegister()" class="primary-btn">Sign Up</button>
+          <p class="switch-form">Already have an account? <a href="#" onclick="showLoginForm();return false;">Login</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 页面1: 画廊浏览 (Explore) -->
+    <div class="page" id="explorePage">
+      <div class="header explore-header">
+        <div class="logo">🎨</div>
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="explore">Explore</button>
+        </div>
+      </div>
+      
+      <div class="gallery-grid" id="galleryGrid">
+        <!-- 动态加载作品 -->
+      </div>
+      
+      <div class="bottom-nav-main">
+        <button class="nav-main-btn" data-page="explorePage">
+          <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z"/></svg>
+          <span>Home</span>
+        </button>
+        <button class="nav-main-btn center-btn" data-page="selectStreamPage">
+          <div class="center-icon">⌖</div>
+        </button>
+        <button class="nav-main-btn" data-page="profilePage">
+          <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+          <span>Me</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 页面2: 选择房间 -->
+    <div class="page" id="selectStreamPage" style="display: none;">
+      <div class="header simple-header">
+        <button class="back-btn" onclick="showPage('explorePage')">
+          <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/></svg>
+        </button>
+        <h1 class="title">Select a Stream to Join</h1>
+        <!-- 分页控件会动态插入这里 -->
+      </div>
+
+      <div class="stream-list">
+        <div class="stream-card create-new-card" onclick="createNewDrawingAndStart()">
+          <div class="create-new-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24"><path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+          </div>
+          <span style="font-weight: 600;">Create New Drawing</span>
+          <svg class="arrow-icon" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
+        </div>
+        <!-- 其他会话房间将动态加载 -->
+      </div>
+    </div>
+
+    <!-- 页面3: 绘画界面 -->
+    <div class="page" id="drawPage" style="display: none;">
+      <div class="header">
+        <button class="back-btn" onclick="showPage('selectStreamPage')">
+          <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/></svg>
+        </button>
+        <h1 class="title" id="drawPageTitle">Drawing Room</h1>
+      </div>
+
+      <div class="canvas-wrapper">
+        <canvas id="drawCanvas"></canvas>
+      </div>
+
+      <div class="toolbar">
+        <div class="brush-style-selector">
+          <button class="brush-style-btn active" data-style="normal" id="normalBrush">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M20.71,4.63L19.37,3.29C19,2.9 18.35,2.9 17.96,3.29L9,12.25L11.75,15L20.71,6.04C21.1,5.65 21.1,5 20.71,4.63M7,14A3,3 0 0,0 4,17C4,18.31 2.84,19 2,19C2.92,20.22 4.5,21 6,21A4,4 0 0,0 10,17A3,3 0 0,0 7,14Z"/></svg>
+            <span class="brush-style-label">Brush</span>
+          </button>
+          <button class="brush-style-btn" data-style="spray" id="sprayBrush">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+            <span class="brush-style-label">Spray</span>
+          </button>
+          <button class="brush-style-btn" data-style="paint" id="paintBrush">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M18,4V3A1,1 0 0,0 17,2H5A1,1 0 0,0 4,3V7A1,1 0 0,0 5,8H17A1,1 0 0,0 18,7V6H19V10H9V21A1,1 0 0,0 10,22H12A1,1 0 0,0 13,21V12H21V4H18Z"/></svg>
+            <span class="brush-style-label">Paint</span>
+          </button>
+          <button class="brush-style-btn" data-style="roller" id="rollerBrush">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M6,2H18A2,2 0 0,1 20,4V8A2,2 0 0,1 18,10H13V15H14A2,2 0 0,1 16,17V22H8V17A2,2 0 0,1 10,15H11V10H6A2,2 0 0,1 4,8V4A2,2 0 0,1 6,2Z"/></svg>
+            <span class="brush-style-label">Roller</span>
+          </button>
+        </div>
+        
+        <div class="tool-panel">
+          <div class="tool-section">
+            <button class="tool-icon active" id="brushTool" title="Brush">
+              <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M20.71,4.63L19.37,3.29C19,2.9 18.35,2.9 17.96,3.29L9,12.25L11.75,15L20.71,6.04C21.1,5.65 21.1,5 20.71,4.63M7,14A3,3 0 0,0 4,17C4,18.31 2.84,19 2,19C2.92,20.22 4.5,21 6,21A4,4 0 0,0 10,17A3,3 0 0,0 7,14Z"/></svg>
+            </button>
+            <button class="tool-icon" id="eraserTool" title="Eraser">
+              <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M16.24,3.56L21.19,8.5C21.97,9.29 21.97,10.55 21.19,11.34L12,20.53C10.44,22.09 7.91,22.09 6.34,20.53L2.81,17C2.03,16.21 2.03,14.95 2.81,14.16L13.41,3.56C14.2,2.78 15.46,2.78 16.24,3.56M4.22,15.58L7.76,19.11C8.54,19.9 9.8,19.9 10.59,19.11L14.12,15.58L9.17,10.63L4.22,15.58Z"/></svg>
+            </button>
+          </div>
+
+          <div class="brush-sizes">
+            <button class="size-dot small" data-size="2"></button>
+            <button class="size-dot medium active" data-size="5"></button>
+            <button class="size-dot large" data-size="10"></button>
+          </div>
+
+          <div class="color-picker-wrapper">
+            <input type="color" id="colorPicker" value="#000000">
+            <label for="colorPicker" class="color-wheel">
+              <div class="color-wheel-gradient"></div>
+              <div class="color-indicator" id="colorIndicator"></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="bottom-nav">
+          <button class="nav-btn" id="shareBtn">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z"/></svg>
+            <span class="online-count" id="onlineCount">1</span>
+          </button>
+          <button class="nav-btn" id="saveBtn" title="保存">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 页面4: 作品详情（带评论）-->
+    <div class="page" id="detailPage" style="display: none;">
+      <div class="header simple-header">
+        <button class="back-btn" onclick="showPage('explorePage')">
+          <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/></svg>
+        </button>
+        <div class="user-info">
+          <!-- Participants will be dynamically inserted here -->
+        </div>
+      </div>
+
+      <div class="detail-content">
+        <div class="detail-artwork-info">
+          <h2 id="detailTitle">Untitled</h2>
+          <div class="detail-actions">
+            <button class="like-btn" id="detailLikeBtn">
+              <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/></svg>
+              <span id="detailLikesCount">0</span>
+            </button>
+          </div>
+        </div>
+        
+        <canvas id="detailCanvas" class="detail-canvas"></canvas>
+        
+        <div class="comments-section">
+          <div class="comments-header" id="commentsHeader">0 Comments</div>
+          <div id="commentsList">
+            <!-- 评论将动态加载 -->
+          </div>
+          <div class="comment-input">
+            <input type="text" id="commentInput" placeholder="Add a comment...">
+            <button id="submitCommentBtn" class="submit-comment-btn">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 页面5: 预览发布 -->
+    <div class="page" id="previewPage" style="display: none;">
+      <div class="header simple-header">
+        <button class="back-btn" onclick="showPage('drawPage')">
+          <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/></svg>
+        </button>
+        <h1 class="title">Preview</h1>
+      </div>
+
+      <div class="preview-content">
+        <div class="preview-title-input">
+          <input type="text" id="artworkTitle" placeholder="Give your artwork a title..." maxlength="50">
+        </div>
+        <canvas id="previewCanvas" class="preview-canvas"></canvas>
+      </div>
+
+      <div class="publish-footer">
+        <button class="publish-button" onclick="publishDrawing()">Publish Artwork</button>
+      </div>
+    </div>
+
+    <!-- 页面6: 个人资料 -->
+    <div class="page" id="profilePage" style="display: none;">
+      <div class="header profile-header">
+        <button class="back-btn" onclick="showPage('explorePage')">
+          <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/></svg>
+        </button>
+        <button class="logout-btn-header" onclick="logout()">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z"/></svg>
+        </button>
+      </div>
+
+      <div class="profile-content">
+        <div class="profile-info">
+          <div class="profile-avatar-section">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23c58882'/%3E%3C/svg%3E" class="profile-avatar">
+            <button class="clear-data-btn" onclick="clearAppData()" title="Clear all data (keep user info)">
+              <svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            </button>
+          </div>
+          <h2 class="username">Guest</h2>
+          <p class="profile-id">ID: 12345789</p>
+          <p class="profile-desc">Draw, share, and collaborate with others.</p>
+        </div>
+
+        <div class="profile-works">
+          <div class="work-item">
+            <canvas class="work-canvas" width="150" height="150"></canvas>
+            <div class="work-footer">
+              <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23c58882'/%3E%3C/svg%3E" class="work-avatar">
+              <span>Guest</span>
+              <span class="work-likes">♡ 999+</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav-main">
+        <button class="nav-main-btn" data-page="explorePage">
+          <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z"/></svg>
+          <span>Home</span>
+        </button>
+        <button class="nav-main-btn center-btn" data-page="selectStreamPage">
+          <div class="center-icon">⌖</div>
+        </button>
+        <button class="nav-main-btn active" data-page="profilePage">
+          <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+          <span>Me</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="avatar-helper.js"></script>
+  <script src="sessions-page.js"></script>
+  <script src="multipage-app.js"></script>
+</body>
+</html>

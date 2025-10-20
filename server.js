@@ -77,22 +77,21 @@ function initDatabase() {
       FOREIGN KEY (user_id) REFERENCES users(id),
       FOREIGN KEY (session_id) REFERENCES sessions(id)
     )
-  `);
-  
-  // Add updated_at column if it doesn't exist (for existing databases)
-  // Note: SQLite doesn't support non-constant defaults in ALTER TABLE
-  db.run(`ALTER TABLE artworks ADD COLUMN updated_at DATETIME`, (err) => {
+  `, (err) => {
     if (err) {
-      if (!err.message.includes('duplicate column')) {
-        console.error('Error adding updated_at column:', err);
-      }
+      console.error('Error creating artworks table:', err);
     } else {
-      // Update existing records to set updated_at = created_at
-      db.run(`UPDATE artworks SET updated_at = created_at WHERE updated_at IS NULL`, (err) => {
-        if (err) {
-          console.error('Error updating updated_at values:', err);
-        } else {
-          console.log('Successfully added and initialized updated_at column');
+      // Check if updated_at column exists, if not add it (for existing databases)
+      db.run(`SELECT updated_at FROM artworks LIMIT 1`, (err) => {
+        if (err && err.message.includes('no such column')) {
+          // Column doesn't exist, add it
+          db.run(`ALTER TABLE artworks ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP`, (err) => {
+            if (err) {
+              console.error('Error adding updated_at column:', err);
+            } else {
+              console.log('Successfully added updated_at column to existing table');
+            }
+          });
         }
       });
     }
